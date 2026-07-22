@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
@@ -37,9 +36,10 @@ public class WebSecurity {
                 .authorizeHttpRequests(auth -> auth
 //                                .requestMatchers(HttpMethod.POST, "/users").permitAll()
 //                                .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
-                                .requestMatchers("/users/**").access(
-                                        new WebExpressionAuthorizationManager("hasIpAddress('" +
-                                                env.getProperty("gateway.ip") + "')"))
+                                .requestMatchers("/users/**").permitAll()
+//                                .requestMatchers("/users/**").access(
+//                                        new WebExpressionAuthorizationManager("hasIpAddress('" +
+//                                                env.getProperty("gateway.ip") + "')"))
                                 .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
                                 .anyRequest().authenticated()
                 )
