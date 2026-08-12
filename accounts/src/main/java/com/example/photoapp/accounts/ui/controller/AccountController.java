@@ -18,6 +18,7 @@ public class AccountController {
     @GetMapping("/status/check")
     public String status() {
         log.info("check status on port:{}", environment.getProperty("local.server.port"));
-        return "working on port: " + environment.getProperty("local.server.port");
+        return "Working on port: " + environment.getProperty("local.server.port") + ", with token=" +
+                environment.getProperty("token.secret_key");
     }
 }
