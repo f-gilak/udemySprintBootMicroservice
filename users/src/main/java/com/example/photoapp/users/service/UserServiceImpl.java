@@ -1,10 +1,13 @@
 package com.example.photoapp.users.service;
 
+import com.example.photoapp.users.data.AlbumServiceClient;
 import com.example.photoapp.users.data.UserEntity;
 import com.example.photoapp.users.data.UsersRepository;
 import com.example.photoapp.users.shared.UserDto;
 import com.example.photoapp.users.ui.model.AlbumResponseModel;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.core.ParameterizedTypeReference;
@@ -21,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -29,6 +33,7 @@ public class UserServiceImpl implements UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final RestTemplate restTemplate;
     private final Environment env;
+    private final AlbumServiceClient albumServiceClient;
 
     @Override
     public UserDto createUser(UserDto userDto) {
@@ -58,8 +63,19 @@ public class UserServiceImpl implements UserService {
             throw new UsernameNotFoundException("user not found");
         }
         UserDto userDto = new ModelMapper().map(userEntity, UserDto.class);
-        userDto.setAlbums(getAlbumByUserId(userDto.getUserId()));
+//        List<AlbumResponseModel> albums=getAlbumByUserId(userId);
+        List<AlbumResponseModel> albums = getAlbumByUserIdWitFeign(userId);
+        userDto.setAlbums(albums);
         return userDto;
+    }
+
+    private List<AlbumResponseModel> getAlbumByUserIdWitFeign(String userId) {
+        try {
+            return albumServiceClient.getAlbums(userId);
+        } catch (FeignException e) {
+            log.error(e.getLocalizedMessage());
+        }
+        return null;
     }
 
     private List<AlbumResponseModel> getAlbumByUserId(String userId) {
