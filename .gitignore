@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+/album/.gitattributes
+/album/.gitignore
+/album/mvnw.cmd
+/album/mvnw
+/album/.mvn/wrapper/maven-wrapper.properties

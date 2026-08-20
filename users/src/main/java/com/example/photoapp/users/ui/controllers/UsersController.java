@@ -4,6 +4,7 @@ import com.example.photoapp.users.service.UserService;
 import com.example.photoapp.users.shared.UserDto;
 import com.example.photoapp.users.ui.model.CreateUserRequestModel;
 import com.example.photoapp.users.ui.model.CreateUserResponseModel;
+import com.example.photoapp.users.ui.model.UserResponseModel;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -37,5 +38,12 @@ public class UsersController {
         UserDto createUser = userService.createUser(userDto);
         CreateUserResponseModel responseModel = modelMapper.map(createUser, CreateUserResponseModel.class);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseModel);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserResponseModel> getUser(@PathVariable("userId") String userId) {
+        UserDto userDto = userService.getUserByUserId(userId);
+        UserResponseModel returnValue = new ModelMapper().map(userDto, UserResponseModel.class);
+        return ResponseEntity.status(HttpStatus.OK).body(returnValue);
     }
 }

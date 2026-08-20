@@ -1,25 +1,34 @@
 package com.example.photoapp.users.service;
 
 import com.example.photoapp.users.data.UserEntity;
-import com.example.photoapp.users.data.UsersRepositiory;
+import com.example.photoapp.users.data.UsersRepository;
 import com.example.photoapp.users.shared.UserDto;
+import com.example.photoapp.users.ui.model.AlbumResponseModel;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
+import org.springframework.http.*;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UsersRepositiory usersRepositiory;
+    private final UsersRepository usersRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final RestTemplate restTemplate;
+    private final Environment env;
 
     @Override
     public UserDto createUser(UserDto userDto) {
@@ -28,14 +37,14 @@ public class UserServiceImpl implements UserService {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         UserEntity userEntity = modelMapper.map(userDto, UserEntity.class);
-        usersRepositiory.save(userEntity);
+        usersRepository.save(userEntity);
         UserDto createdUser = modelMapper.map(userEntity, UserDto.class);
         return createdUser;
     }
 
     @Override
     public UserDto findUserDetailByEmail(String username) {
-        UserEntity userEntity = usersRepositiory.findByEmail(username);
+        UserEntity userEntity = usersRepository.findByEmail(username);
         if (userEntity == null) {
             throw new UsernameNotFoundException(username);
         }
@@ -43,8 +52,31 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserDto getUserByUserId(String userId) {
+        UserEntity userEntity = usersRepository.findByUserId(userId);
+        if (userEntity == null) {
+            throw new UsernameNotFoundException("user not found");
+        }
+        UserDto userDto = new ModelMapper().map(userEntity, UserDto.class);
+        userDto.setAlbums(getAlbumByUserId(userDto.getUserId()));
+        return userDto;
+    }
+
+    private List<AlbumResponseModel> getAlbumByUserId(String userId) {
+        String url = String.format(Objects.requireNonNull(env.getProperty("album.url")), userId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        ResponseEntity<List<AlbumResponseModel>> albumsResponse = restTemplate.exchange(url, HttpMethod.GET, entity,
+                new ParameterizedTypeReference<List<AlbumResponseModel>>() {
+                });
+        return albumsResponse.getBody();
+    }
+
+    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserEntity userEntity = usersRepositiory.findByEmail(username);
+        UserEntity userEntity = usersRepository.findByEmail(username);
         if (userEntity == null) {
             throw new UsernameNotFoundException(username);
         }
