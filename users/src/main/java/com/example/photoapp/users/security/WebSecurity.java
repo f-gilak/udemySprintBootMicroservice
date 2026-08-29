@@ -40,6 +40,7 @@ public class WebSecurity {
 //                                .requestMatchers("/users/**").access(
 //                                        new WebExpressionAuthorizationManager("hasIpAddress('" +
 //                                                env.getProperty("gateway.ip") + "')"))
+                                .requestMatchers("/actuator/**").permitAll()
                                 .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
                                 .anyRequest().authenticated()
                 )
