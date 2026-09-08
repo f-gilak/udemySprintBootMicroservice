@@ -20,7 +20,7 @@ public interface AlbumServiceClient {
     @GetMapping("/users/{id}/albums")
     @Retry(name = "albums-ws")
     @CircuitBreaker(name = "albums-ws", fallbackMethod = "getAlbumsFallback")
-    public List<AlbumResponseModel> getAlbums(@PathVariable String id);
+    List<AlbumResponseModel> getAlbums(@PathVariable String id);
 
     default List<AlbumResponseModel> getAlbumsFallback(@PathVariable String id, Throwable throwable) {
         log.error(
